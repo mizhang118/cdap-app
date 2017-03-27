@@ -34,6 +34,7 @@ public class VolvoFeature extends Entity implements Writable, Comparable<VolvoFe
 	private String dayType;
 	
 	private Long startTime;
+	private Long endTime;
 	
 	public VolvoFeature() {
 		super();
@@ -47,12 +48,13 @@ public class VolvoFeature extends Entity implements Writable, Comparable<VolvoFe
 		this.setId(trip.getId());
 		this.setVehicleId(trip.getVin());
 		this.startTime = trip.getStartTime();
+		this.endTime = trip.getEndTime();
 		TimeZone originTimezone = TimeLocationUtil.getTimeZoneByLongitude(trip.getStartLongitude());
 		this.setDayOfWeek(TimeLocationUtil.getDayOfWeek(trip.getStartTime(), originTimezone));
 		this.setTimeOfDay(TimeLocationUtil.getTimeOfDay(trip.getStartTime(), originTimezone));
 		this.setDayType(TimeLocationUtil.getDayType(trip.getStartTime(), originTimezone));
 		this.setOrigin(filterStreetNumber(trip.getStartStreetAddress()) + " " + trip.getStartCity() + " " + trip.getStartRegion());
-		this.setDestination(filterStreetNumber(trip.getEndStreetAddress()) + " " + trip.getEndCity() + " " + trip.getEndRegion());
+		this.setDestination(trip.getEndStreetAddress() + " " + trip.getEndCity() + " " + trip.getEndRegion());
 	}
 	
 	public String getId() {
@@ -119,6 +121,22 @@ public class VolvoFeature extends Entity implements Writable, Comparable<VolvoFe
 		this.dayType = dayType;
 	}
 
+	public Long getStartTime() {
+		return startTime;
+	}
+
+	public void setStartTime(Long startTime) {
+		this.startTime = startTime;
+	}
+
+	public Long getEndTime() {
+		return endTime;
+	}
+
+	public void setEndTime(Long endTime) {
+		this.endTime = endTime;
+	}
+
 	/**
 	 * @param input string with format of MorningsideDrive176, supposing street number is in the end.
 	 * @return
@@ -174,5 +192,14 @@ public class VolvoFeature extends Entity implements Writable, Comparable<VolvoFe
 		}
 		
 		return 0;
+	}
+	
+	public String asRFriendlyFeatureVector() {
+	return getOrigin() + "," + getDestination() + "," + getTimeOfDay() + "," + 
+	       getDayOfWeek() + "," + getDayType()+","+getDuration();
+	}
+	
+	public static String getRFriendlyFeatureVectorHeaders() {
+		return "origin,destination,timeOfDay,dayOfWeek,dayType,duration";
 	}
 }

@@ -7,9 +7,13 @@
 
 package com.ericsson.pm.c26.cdap;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ericsson.pm.c26.entities.VolvoFeature;
 import com.ericsson.pm.c26.entities.VolvoTrip;
 
 import co.cask.cdap.api.annotation.HashPartition;
@@ -25,14 +29,81 @@ public class C26FeatureFlowlet extends GenericFlowlet {
 	private C26TripDataset featureStore;
 	
     // Emitter for emitting a trip instance to the next Flowlet (c26ModelFlowlet)
-    private OutputEmitter<VolvoTrip> output;
+    private OutputEmitter<VolvoFeature> output;
+    
+    /**
+     * Map<String, Long> caches the endtime of last trip of same vin.
+     * Since the flowlet data transition is partitioned by vin, so that we the local cache is valid.
+     * The cache depends on two pre-requirements: (1) trips have to be ordered by timestap. (2) data transition
+     * has been partitioned by vin.
+     */
+    private Map<String, Long> endTimeOfLastTrip = new HashMap<String, Long>(2048);
 
 	@HashPartition("vin")
 	@ProcessInput
 	public void processFeature(VolvoTrip trip) {
 		// extract features and save them into c26FeatureStore
-		featureStore.addTrip(trip);
+		VolvoFeature feature = new VolvoFeature(trip);
+		fillParkingTime(feature);
+		featureStore.addFeature(feature);
 		
-		output.emit(trip, "vin", trip.getVin().hashCode());
+		output.emit(feature, "vin", feature.getVehicleId().hashCode());
+	}
+	
+	private void fillParkingTime(VolvoFeature feature) {
+		if ( feature == null || feature.getDuration() != null ) {
+			return;
+		}
+		
+		Long lastEndTime = endTimeOfLastTrip.get(feature.getVehicleId());
+		if ( lastEndTime == null ) {
+			feature.setDuration("N/A");
+		}
+		else {
+			feature.setDuration("" + (convertParkingTime(feature.getStartTime() - lastEndTime)) + "MIN");
+		}
+		
+		//update the cache
+		endTimeOfLastTrip.put(feature.getVehicleId(), feature.getEndTime());
+	}
+	
+	/**
+	 * 
+	 * @param parking milliseconds
+	 * @return
+	 */
+	public static int convertParkingTime(long parking) {
+		//at first convert milliseconds to minutes
+		parking = parking / 1000 / 60;
+		
+		//make minimum parking time as 15 min
+		if ( parking < 15 ) {
+			parking = 15L;
+		}
+		
+		int check = 15;
+		int endCheck = 960;
+		while ( check <= endCheck ) {
+			if ( parking <= check ) {
+				if ( check <= 15 ) {
+					return check;
+				}
+				else {
+					int preCheck = check / 2;
+					int meanCheck = (preCheck + check) / 2;
+					if ( parking < meanCheck ) {
+						return preCheck;
+					}
+					else {
+						return check;
+					}
+				}
+			}
+			 
+			check = check * 2;
+		}
+		
+		int MIN_IN_A_DAY = 60 * 24; 
+		return (((int)parking/MIN_IN_A_DAY + 1) * MIN_IN_A_DAY);
 	}
 }

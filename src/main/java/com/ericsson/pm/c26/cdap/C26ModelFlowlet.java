@@ -10,7 +10,7 @@ package com.ericsson.pm.c26.cdap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ericsson.pm.c26.entities.VolvoTrip;
+import com.ericsson.pm.c26.entities.VolvoFeature;
 
 import co.cask.cdap.api.annotation.HashPartition;
 import co.cask.cdap.api.annotation.ProcessInput;
@@ -23,10 +23,10 @@ public class C26ModelFlowlet extends GenericFlowlet {
 	@UseDataSet("c26ModelStore")
 	private C26TripDataset modelStore;
 
-	@HashPartition("ip")
+	@HashPartition("vin")
 	@ProcessInput
-	public void processModel(VolvoTrip trip) {
+	public void processModel(VolvoFeature feature) {
 		// extract features and save them into c26FeatureStore
-		modelStore.addTrip(trip);
+		modelStore.addFeature(feature);
 	}
 }

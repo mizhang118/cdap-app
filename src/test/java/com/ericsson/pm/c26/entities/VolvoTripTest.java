@@ -43,6 +43,9 @@ public class VolvoTripTest {
 		VolvoTrip thirdTrip = new VolvoTrip();
 		try { thirdTrip.copy(trip); } catch (Exception e) { e.printStackTrace(); }
 		System.out.println(thirdTrip.toJson());
+		
+		VolvoFeature feature = new VolvoFeature(trip);
+		System.out.println(feature.toJson());
 	}
 
 }

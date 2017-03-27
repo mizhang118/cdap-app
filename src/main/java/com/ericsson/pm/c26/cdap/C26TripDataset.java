@@ -21,6 +21,7 @@ import co.cask.cdap.api.dataset.table.Put;
 import co.cask.cdap.api.dataset.table.Row;
 import co.cask.cdap.api.dataset.table.Table;
 
+import com.ericsson.pm.c26.entities.VolvoFeature;
 import com.ericsson.pm.c26.entities.VolvoTrip;
 import com.google.common.reflect.TypeToken;
 
@@ -51,6 +52,16 @@ public class C26TripDataset extends AbstractDataset
 	public void addTrip(VolvoTrip trip) {
 		//table.increment(new Increment(logInfo.getIp(), logInfo.getUri(), 1L));
 		table.put(new Put(trip.getVin()).add(trip.getId(), trip.toJson()));;
+	}
+	
+	/**
+	 * add a feature into a vehicle VIN_ID
+	 *
+	 * @param Trip feature data
+	 */
+	public void addFeature(VolvoFeature feature) {
+		//table.increment(new Increment(logInfo.getIp(), logInfo.getUri(), 1L));
+		table.put(new Put(feature.getVehicleId()).add(feature.getId(), feature.toJson()));;
 	}
 
 	/**
