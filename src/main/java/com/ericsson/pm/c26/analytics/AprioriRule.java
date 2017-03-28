@@ -5,7 +5,7 @@
  * The class is ported from c26analytics project without changes
  */
 
-package com.ericsson.pm.analytics;
+package com.ericsson.pm.c26.analytics;
 
 import java.util.HashMap;
 import java.util.Map;

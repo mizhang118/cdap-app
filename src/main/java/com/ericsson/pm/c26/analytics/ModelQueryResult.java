@@ -1,4 +1,4 @@
-package com.ericsson.pm.analytics;
+package com.ericsson.pm.c26.analytics;
 
 import org.json.JSONArray;
 import org.json.JSONException;

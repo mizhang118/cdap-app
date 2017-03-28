@@ -5,10 +5,13 @@
  * The class is ported from c26analytics project without changes
  */
 
-package com.ericsson.pm.analytics;
+package com.ericsson.pm.c26.analytics;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -20,25 +23,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ericsson.pm.c26.entities.VolvoFeature;
+import com.ericsson.pm.c26.entities.VolvoTrip;
 
 public class RecommendationServerForVolvo {
 	private static final Logger LOG = LoggerFactory.getLogger(RecommendationServerForVolvo.class);
 	private static final String tripsTemporaryDirectory = "/tmp";
-	private String rScriptPath = "/home/c26/c26-analytics/src/main/java/com/ericsson/c26/analytics/recommendations/R";
+	private String rScriptPath = "/tmp/CDAP/predictionDestinationAndDuration.R";
 
 	public RecommendationServerForVolvo() {
 	}
 
-	public int trainModel(String vin, String type) {
+	public List<AprioriRule> trainModel(String vin, String type, List<VolvoFeature> f) {
 		LOG.info("Scheduling model training for vin " + vin);
-		List<VolvoFeature> features = null; //storage.getVolvoTrips(vin);
+		List<VolvoFeature> features = new ArrayList<VolvoFeature>();
+		if ( f != null ) {
+			features = f;
+		}
+		List<AprioriRule> rules = new ArrayList<AprioriRule>();
 		LOG.info("Obtained {} trips for vin {} to train model", features.size(), vin);
 		if (features.size() > 0) {
 			String dataFilePath = dumpTripsRVectorToFile(features);
 			
-			DoTrainRecommendationModelForVolvo trainStopThread = new DoTrainRecommendationModelForVolvo(vin, rScriptPath, dataFilePath,type);
+			DoTrainRecommendationModelForVolvo trainStop = new DoTrainRecommendationModelForVolvo(vin, rScriptPath, dataFilePath,type);
+			rules = trainStop.processResult();
 		}
-		return features.size();
+		
+		return rules;
 	}
 
 	
@@ -55,7 +65,7 @@ public class RecommendationServerForVolvo {
 	public void trainAll() {
 		List<String> vins = null; //storage.getTripsUsers();
 		LOG.info("Triggering training for all " + vins.size() + " vins" );
-		for (String vin: vins) trainModel(vin,"durationAndDestination");
+		for (String vin: vins) trainModel(vin,"durationAndDestination", null);
 	}
 
 	private String dumpTripsRVectorToFile(List<VolvoFeature> features) {
@@ -73,6 +83,33 @@ public class RecommendationServerForVolvo {
 			e.printStackTrace();
 		}
 		return fileFullPath;
+	}
+	
+	public static void main(String[] args) {
+		String data = "/Users/mz/test/volvo/data/Volvo-Cleaned-data-ordered-vin-14867.txt";
+		List<VolvoFeature> features = new ArrayList<VolvoFeature>();
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(data));
+			String line = null;
+			while ( (line = reader.readLine()) != null ) {
+				System.out.println(line);
+				
+				VolvoTrip trip = VolvoTrip.parse(line);
+				VolvoFeature feature = new VolvoFeature(trip);
+				features.add(feature);
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace(System.err);
+		}
+		
+		RecommendationServerForVolvo formatter = new RecommendationServerForVolvo();
+		List<AprioriRule> rules = formatter.trainModel("14867", "destinationAndDuration", features);
+		System.out.println(rules.size());
+		for( AprioriRule rule : rules ) {
+			System.out.println(rule.toJson().toString());
+		}
+		
 	}
 
 }

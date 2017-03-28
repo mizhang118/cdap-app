@@ -5,7 +5,7 @@
  * The class trains Destination and duration model for volvo trips
  */
 
-package com.ericsson.pm.analytics;
+package com.ericsson.pm.c26.analytics;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -24,9 +24,14 @@ public class DoTrainRecommendationModelForVolvo {
 	
 	private static final Logger log = LoggerFactory.getLogger(DoTrainRecommendationModelForVolvo.class);
 	private String vin;
-	private String rScriptPath;
-	private String dataFilePath;
-	private String trainingType;
+	private String r = "/Library/Frameworks/R.framework/Resources/bin/Rscript";
+	private String rScriptPath = "/tmp/CDAP/predictionDestinationAndDuration.R";
+	private String dataFilePath = "/tmp/CDAP/data.csv";
+	private String trainingType = "destinationAndDuration";
+	
+	public DoTrainRecommendationModelForVolvo(String vin) {
+		this.vin = vin;
+	}
 
 	public DoTrainRecommendationModelForVolvo(String vin, String rScriptPath, String dataFilePath, String type) {
 		this.vin = vin;
@@ -44,13 +49,11 @@ public class DoTrainRecommendationModelForVolvo {
 		return result;
 	}
 	
-	public List<AprioriRule> processResult(String rPath, String file) {
+	public List<AprioriRule> processResult() {
 		Process rExecutorforDurationAndDestination = null;
 		try {
-			//rExecutor = Runtime.getRuntime().exec("Rscript " + rScriptPath + " " + dataFilePath+" "+vin+" "+storage.getPlotsSink());
-				//rExecutorforDurationAndDestination = Runtime.getRuntime().exec("Rscript "+rScriptPath +" "+"/home/c26/c26-analytics/src/main/java/com/ericsson/c26/analytics/recommendations/R/duration1.txt"); 
-			rExecutorforDurationAndDestination = Runtime.getRuntime().exec("Rscript "+ rPath + "/" + file + " " + dataFilePath); 
-				log.trace("Executing r script " + rScriptPath + " for predicting {} with file " + dataFilePath, file);
+			rExecutorforDurationAndDestination = Runtime.getRuntime().exec(r + " " + rScriptPath + " " + dataFilePath); 
+				log.trace("Executing r script " + rScriptPath + " for predicting {} with file " + dataFilePath);
 			
 		} catch (IOException e) {
 			log.error("IOException while executing R command process");
@@ -59,7 +62,7 @@ public class DoTrainRecommendationModelForVolvo {
 		}
 		
 		BufferedReader destinationAndDurationReader;
-		String resultLine,destinationAndDurationResult = null;
+		String destinationAndDurationResult = null;
 		List<String> destinationAndDurationOutput = new ArrayList<String>();		
 		destinationAndDurationReader = new BufferedReader(new InputStreamReader(rExecutorforDurationAndDestination.getInputStream()));
 		try {
@@ -72,20 +75,12 @@ public class DoTrainRecommendationModelForVolvo {
 			log.error("IOException while iterating through R command process output");
 			e.printStackTrace();
 		}
-		//Differentiating post-processing of results for media, trip & Destination recommendations
-		//Different post-processing for destination and duration
-		//if(!trainingType.equals(ControlMessageModelTrainingTypeCommand.TRIP)&&!trainingType.equals(ControlMessageModelTrainingTypeCommand.MEDIA))
+
 		List<AprioriRule> destinationAndDurationRules = null;
-		//if ( trainingType.equals(ControlMessageModelTrainingTypeCommand.DESTINATION) || 
-		//	 trainingType.equals(ControlMessageModelTrainingTypeCommand.DURATION) )
-		//{
-			AprioriResult result = new AprioriResult(destinationAndDurationOutput);
-			destinationAndDurationRules = filterDestinationAndDurationRules(result.getRules());
-			int intputTrips = countLinesInFile(dataFilePath);
-			log.trace("Vin: " + vin + ", R " + file + ", data: " + dataFilePath + ", input=output: " + countLinesInFile(dataFilePath) + "="  + destinationAndDurationRules.size());	
-			//log.trace("First rule from thread is "+destinationAndDurationRules.get(0).toString());
-			//storage.saveDestinationAndDurationRules(vin, destinationAndDurationRules);
-		//}
+		AprioriResult result = new AprioriResult(destinationAndDurationOutput);
+		destinationAndDurationRules = filterDestinationAndDurationRules(result.getRules());
+		int intputTrips = countLinesInFile(dataFilePath);
+		log.trace("Vin: " + vin + ", R " + rScriptPath + ", data: " + dataFilePath + ", input=output: " + intputTrips + "="  + destinationAndDurationRules.size());
 		
 		return destinationAndDurationRules;
 	}
@@ -110,6 +105,15 @@ public class DoTrainRecommendationModelForVolvo {
 		}
 		
 		return count;
+	}
+	
+	public static void main(String[] args) {
+		DoTrainRecommendationModelForVolvo trainer = new DoTrainRecommendationModelForVolvo("12345678");
+		List<AprioriRule> rules = trainer.processResult();
+		System.out.println(rules.size());
+		for ( AprioriRule rule : rules ) {
+			System.out.println(rule.toJson().toString());
+		}
 	}
 
 }

@@ -1,4 +1,4 @@
-package com.ericsson.pm.analytics;
+package com.ericsson.pm.c26.analytics;
 
 import java.util.ArrayList;
 import java.util.List;

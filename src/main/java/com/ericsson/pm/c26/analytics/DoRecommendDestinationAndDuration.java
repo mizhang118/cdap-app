@@ -5,7 +5,7 @@
  * The class is ported from c26analytics project without changes
  */
 
-package com.ericsson.pm.analytics;
+package com.ericsson.pm.c26.analytics;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -20,8 +20,8 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ericsson.pm.c26.analytics.ModelQueryResult;
 import com.ericsson.pm.c26.common.C26AnalyticsConstants;
-import com.ericsson.pm.analytics.ModelQueryResult;
 
 public class DoRecommendDestinationAndDuration {
 
