@@ -104,7 +104,7 @@ public class RecommendationServerForVolvo {
 		}
 		
 		RecommendationServerForVolvo formatter = new RecommendationServerForVolvo();
-		List<AprioriRule> rules = formatter.trainModel("14867", "destinationAndDuration", features);
+		List<AprioriRule> rules = formatter.trainModel("1234", "destinationAndDuration", features);
 		System.out.println(rules.size());
 		for( AprioriRule rule : rules ) {
 			System.out.println(rule.toJson().toString());

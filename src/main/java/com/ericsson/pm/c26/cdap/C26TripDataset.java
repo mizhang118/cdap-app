@@ -43,6 +43,15 @@ public class C26TripDataset extends AbstractDataset
 		super(spec.getName(), table);
 		this.table = table;
 	}
+	
+	/**
+	 * add a string into a vehicle VIN_ID
+	 *
+	 * @param String data
+	 */
+	public void addData(String rowKey, String key, String data) {
+		table.put(new Put(rowKey).add(key, data));;
+	}
 
 	/**
 	 * add a trip into a vehicle VIN_ID
@@ -65,14 +74,14 @@ public class C26TripDataset extends AbstractDataset
 	}
 
 	/**
-	 * Get a trip from a specified VIN_ID.
+	 * Get a data string from a specified VIN_ID.
 	 *
 	 * @param VIN_ID used to look for all trips of the vehicle
 	 * @return all trips of a vehicle
 	 */
-	public Map<String, String> getTrips(String vin) {
+	public Map<String, String> getData(String vin) {
 		Row row = this.table.get(new Get(vin));
-		Map<String, String> trips = getTrips(row);
+		Map<String, String> trips = getStringData(row);
 		return trips;
 	}
 
@@ -122,10 +131,10 @@ public class C26TripDataset extends AbstractDataset
 
 			@Override
 			public KeyValue<String, Map<String, String>> getCurrentRecord() throws InterruptedException {
-				String ip = Bytes.toString(this.splitReader.getCurrentKey());
+				String vin = Bytes.toString(this.splitReader.getCurrentKey());
 				Row row = this.splitReader.getCurrentValue();
-				Map<String, String> pageCount = getTrips(row);
-				return new KeyValue<String, Map<String, String>>(ip, pageCount);
+				Map<String, String> pageCount = getStringData(row);
+				return new KeyValue<String, Map<String, String>>(vin, pageCount);
 			}
 
 			@Override
@@ -135,7 +144,7 @@ public class C26TripDataset extends AbstractDataset
 		};
 	}
 
-	private Map<String, String> getTrips(Row row) {
+	private Map<String, String> getStringData(Row row) {
 		if (row == null || row.isEmpty()) {
 			return null;
 		}

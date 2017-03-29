@@ -7,8 +7,8 @@
 
 package com.ericsson.pm.c26.cdap;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +29,7 @@ public class C26FeatureFlowlet extends GenericFlowlet {
 	private C26TripDataset featureStore;
 	
     // Emitter for emitting a trip instance to the next Flowlet (c26ModelFlowlet)
-    private OutputEmitter<VolvoFeature> output;
+    private OutputEmitter<String> output;
     
     /**
      * Map<String, Long> caches the endtime of last trip of same vin.
@@ -37,7 +37,7 @@ public class C26FeatureFlowlet extends GenericFlowlet {
      * The cache depends on two pre-requirements: (1) trips have to be ordered by timestap. (2) data transition
      * has been partitioned by vin.
      */
-    private Map<String, Long> endTimeOfLastTrip = new HashMap<String, Long>(2048);
+    private Map<String, Long> endTimeOfLastTrip = new ConcurrentHashMap<String, Long>(2048);;
 
 	@HashPartition("vin")
 	@ProcessInput
@@ -47,7 +47,7 @@ public class C26FeatureFlowlet extends GenericFlowlet {
 		fillParkingTime(feature);
 		featureStore.addFeature(feature);
 		
-		output.emit(feature, "vin", feature.getVehicleId().hashCode());
+		output.emit(feature.getVehicleId(), "vin", feature.getVehicleId().hashCode());
 	}
 	
 	private void fillParkingTime(VolvoFeature feature) {
