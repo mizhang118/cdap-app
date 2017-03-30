@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -69,23 +70,24 @@ public class RecommendationServerForVolvo {
 	}
 
 	private String dumpTripsRVectorToFile(List<VolvoFeature> features) {
-		LOG.trace("No of trips queried from elasticsearch {}", features.size());
+		LOG.info("Number of trips for training {}", features.size());
 		String content = VolvoFeature.getRFriendlyFeatureVectorHeaders();
 		for (VolvoFeature feature: features) {
 			content += "\n" + feature.asRFriendlyFeatureVector();
 		}
 		String fileUuid = UUID.randomUUID().toString();
 		String fileFullPath = tripsTemporaryDirectory + "/" + fileUuid + ".csv";
+		LOG.info("Begin to dump data to {}", fileFullPath);
 		try {
 			FileUtils.writeStringToFile(new File(fileFullPath), content);
+			LOG.info("File dump succeed.");
 		} catch (IOException e) {
-			LOG.error("IOException thrown while dumping trip data to temporary file.");
-			e.printStackTrace();
+			LOG.error("IOException thrown while dumping trip feature data to temporary file", e);
 		}
 		return fileFullPath;
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) {	        
 		String data = "/Users/mz/test/volvo/data/Volvo-Cleaned-data-ordered-vin-14867.txt";
 		List<VolvoFeature> features = new ArrayList<VolvoFeature>();
 		try {
@@ -102,14 +104,13 @@ public class RecommendationServerForVolvo {
 		catch (Exception e) {
 			e.printStackTrace(System.err);
 		}
-		
+	
 		RecommendationServerForVolvo formatter = new RecommendationServerForVolvo();
 		List<AprioriRule> rules = formatter.trainModel("1234", "destinationAndDuration", features);
 		System.out.println(rules.size());
 		for( AprioriRule rule : rules ) {
 			System.out.println(rule.toJson().toString());
-		}
-		
+		}	
 	}
 
 }

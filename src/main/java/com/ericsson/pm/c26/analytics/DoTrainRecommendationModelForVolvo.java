@@ -50,37 +50,36 @@ public class DoTrainRecommendationModelForVolvo {
 	}
 	
 	public List<AprioriRule> processResult() {
+		List<AprioriRule> destinationAndDurationRules = new ArrayList<AprioriRule>();
 		Process rExecutorforDurationAndDestination = null;
 		try {
-			rExecutorforDurationAndDestination = Runtime.getRuntime().exec(r + " " + rScriptPath + " " + dataFilePath); 
-				log.trace("Executing r script " + rScriptPath + " for predicting {} with file " + dataFilePath);
+			String cmd = r + " " + rScriptPath + " " + dataFilePath;
+			log.info("Begin to run command {}", cmd);
+			rExecutorforDurationAndDestination = Runtime.getRuntime().exec(cmd); 
+			log.info("Finish to run command {}", cmd);
 			
 		} catch (IOException e) {
-			log.error("IOException while executing R command process");
-			e.printStackTrace();
-			return null;
+			log.error("IOException while executing R command process", e);
+			return destinationAndDurationRules;
 		}
 		
 		BufferedReader destinationAndDurationReader;
 		String destinationAndDurationResult = null;
-		List<String> destinationAndDurationOutput = new ArrayList<String>();		
+		List<String> destinationAndDurationOutput = new ArrayList<String>();
 		destinationAndDurationReader = new BufferedReader(new InputStreamReader(rExecutorforDurationAndDestination.getInputStream()));
 		try {
 			while ((destinationAndDurationResult = destinationAndDurationReader.readLine()) != null) {
-				//log.info(destinationAndDurationResult);
 				destinationAndDurationOutput.add(destinationAndDurationResult); 
 			}
 
 		} catch (IOException e) {
-			log.error("IOException while iterating through R command process output");
-			e.printStackTrace();
+			log.error("IOException while iterating through R command process output", e);
 		}
-
-		List<AprioriRule> destinationAndDurationRules = null;
+		log.info("Get {} lines of output model strings from R trainning", destinationAndDurationOutput.size());
 		AprioriResult result = new AprioriResult(destinationAndDurationOutput);
 		destinationAndDurationRules = filterDestinationAndDurationRules(result.getRules());
 		int intputTrips = countLinesInFile(dataFilePath);
-		log.trace("Vin: " + vin + ", R " + rScriptPath + ", data: " + dataFilePath + ", input=output: " + intputTrips + "="  + destinationAndDurationRules.size());
+		log.info("Vin: " + vin + ", R " + rScriptPath + ", data: " + dataFilePath + ", input=output: " + intputTrips + "="  + destinationAndDurationRules.size());
 		
 		return destinationAndDurationRules;
 	}
