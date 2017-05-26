@@ -33,6 +33,11 @@ public class VolvoFeature extends Entity implements Writable, Comparable<VolvoFe
 	private String timeOfDay;
 	private String dayType;
 	
+	private Double startLon;
+	private Double startLat;
+	private Double endLon;
+	private Double endLat;
+	
 	private Long startTime;
 	private Long endTime;
 	
@@ -55,6 +60,11 @@ public class VolvoFeature extends Entity implements Writable, Comparable<VolvoFe
 		this.setDayType(TimeLocationUtil.getDayType(trip.getStartTime(), originTimezone));
 		this.setOrigin(filterStreetNumber(trip.getStartStreetAddress()) + " " + trip.getStartCity() + " " + trip.getStartRegion());
 		this.setDestination(trip.getEndStreetAddress() + " " + trip.getEndCity() + " " + trip.getEndRegion());
+		
+		this.setStartLat(trip.getStartLatitude());
+		this.setStartLon(trip.getStartLongitude());
+		this.setEndLat(trip.getEndLatitude());
+		this.setEndLon(trip.getEndLongitude());
 	}
 	
 	public String getId() {
@@ -119,6 +129,38 @@ public class VolvoFeature extends Entity implements Writable, Comparable<VolvoFe
 
 	public void setDayType(String dayType) {
 		this.dayType = dayType;
+	}
+
+	public Double getStartLon() {
+		return startLon;
+	}
+
+	public void setStartLon(Double startLon) {
+		this.startLon = startLon;
+	}
+
+	public Double getStartLat() {
+		return startLat;
+	}
+
+	public void setStartLat(Double startLat) {
+		this.startLat = startLat;
+	}
+
+	public Double getEndLon() {
+		return endLon;
+	}
+
+	public void setEndLon(Double endLon) {
+		this.endLon = endLon;
+	}
+
+	public Double getEndLat() {
+		return endLat;
+	}
+
+	public void setEndLat(Double endLat) {
+		this.endLat = endLat;
 	}
 
 	public Long getStartTime() {
@@ -193,10 +235,20 @@ public class VolvoFeature extends Entity implements Writable, Comparable<VolvoFe
 		
 		return 0;
 	}
+
+	public String asSparkFriendlyFeatureVector() {
+	return "origin=" + getOrigin() + "," + "destination=" + getDestination() + "," + "timeOfDay=" + getTimeOfDay() + "," + "dayOfWeek=" +
+	       getDayOfWeek() + "," + "dayType=" + getDayType() + "," + "duration=" + getDuration();
+	}
 	
 	public String asRFriendlyFeatureVector() {
-	return getOrigin() + "," + getDestination() + "," + getTimeOfDay() + "," + 
-	       getDayOfWeek() + "," + getDayType()+","+getDuration();
+	return this.getVehicleId() + "," + getOrigin() + "," + getDestination() + "," + getTimeOfDay() + "," + 
+	       getDayOfWeek() + "," + getDayType() + "," + getDuration();
+	}
+	
+	public String asClassificationFeatureVector() {
+	return this.getVehicleId() + "," + this.getStartLat() + "," + this.getStartLon() + "," + this.getEndLat() + "," + this.getEndLon() + "," + getTimeOfDay() + "," + 
+	       getDayOfWeek() + "," + getDayType() + "," + getDuration();
 	}
 	
 	public static String getRFriendlyFeatureVectorHeaders() {

@@ -21,9 +21,9 @@ public class C26Flow extends AbstractFlow {
 	    setDescription("c26Flow parses trip raw data, extracts features and generates models");
 	    addFlowlet(FLOWLET_TRIP, new C26TripFlowlet());
 	    addFlowlet(FLOWLET_FEATURE, new C26FeatureFlowlet());
-	    addFlowlet(FLOWLET_MODEL, new C26ModelFlowlet());
+	    //addFlowlet(FLOWLET_MODEL, new C26ModelFlowlet());
 	    connectStream(C26AnalyticsApp.STREAM_NAME, FLOWLET_TRIP);
 	    connect(FLOWLET_TRIP, FLOWLET_FEATURE);
-	    connect(FLOWLET_FEATURE, FLOWLET_MODEL);
+	    //connect(FLOWLET_FEATURE, FLOWLET_MODEL);
 	  }
 }

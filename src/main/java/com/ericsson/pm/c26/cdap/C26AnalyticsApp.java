@@ -6,15 +6,19 @@
 
 package com.ericsson.pm.c26.cdap;
 
+import com.ericsson.pm.c26.spark.AssociationRule;
+
 import co.cask.cdap.api.Config;
 import co.cask.cdap.api.app.AbstractApplication;
 import co.cask.cdap.api.data.stream.Stream;
+import co.cask.cdap.api.spark.AbstractSpark;
 
 public class C26AnalyticsApp extends AbstractApplication<Config> {
 	public static final String APP_NAME = "c26Analytics";
 	public static final String STREAM_NAME = "c26Stream";
 	public static final String DATASET_TRIP_STORE = "c26TripStore";
 	public static final String DATASET_FEATURE_STORE = "c26FeatureStore";
+	public static final String DATASET_TRAIN_STORE = "c26TrainStore";
 	public static final String DATASET_MODEL_STORE = "c26ModelStore";
 	
 	@Override
@@ -27,6 +31,8 @@ public class C26AnalyticsApp extends AbstractApplication<Config> {
 	    createDataset(DATASET_TRIP_STORE, C26TripDataset.class);
 	    // Custom dataset c26FeatureStore to store ML features extracted from trip
 	    createDataset(DATASET_FEATURE_STORE, C26TripDataset.class);
+	    // Custom dataset c26TrainStore to store vin for training
+	    createDataset(DATASET_TRAIN_STORE, C26TripDataset.class);
 	    // Custom dataset c26FeatureStore to store ML features extracted from trip
 	    createDataset(DATASET_MODEL_STORE, C26TripDataset.class);
 	    
@@ -35,5 +41,20 @@ public class C26AnalyticsApp extends AbstractApplication<Config> {
 
 	    // Add the c26 services
 	    //addService(new WiseService());
+	    
+	    addSpark(new SparkAssoicationRule());
 	}
+	
+	  /**
+	   * A Spark Program that uses KMeans algorithm.
+	   */
+	  public static final class SparkAssoicationRule extends AbstractSpark {
+
+	    @Override
+	    public void configure() {
+	      setName("SparkAssociationRule");
+	      setDescription("Spark Association Rule Program");
+	      setMainClass(AssociationRule.class);
+	    }
+	  }
 }

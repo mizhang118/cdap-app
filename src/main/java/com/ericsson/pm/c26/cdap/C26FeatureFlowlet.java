@@ -28,8 +28,11 @@ public class C26FeatureFlowlet extends GenericFlowlet {
 	@UseDataSet("c26FeatureStore")
 	private C26TripDataset featureStore;
 	
+	@UseDataSet("c26TrainStore")
+	private C26TripDataset trainStore;
+	
     // Emitter for emitting a trip instance to the next Flowlet (c26ModelFlowlet)
-    private OutputEmitter<String> output;
+    //private OutputEmitter<String> output;
     
     /**
      * Map<String, Long> caches the endtime of last trip of same vin.
@@ -37,7 +40,7 @@ public class C26FeatureFlowlet extends GenericFlowlet {
      * The cache depends on two pre-requirements: (1) trips have to be ordered by timestap. (2) data transition
      * has been partitioned by vin.
      */
-    private Map<String, Long> endTimeOfLastTrip = new ConcurrentHashMap<String, Long>(2048);;
+    private Map<String, Long> endTimeOfLastTrip = new ConcurrentHashMap<String, Long>(2048);
 
 	@HashPartition("vin")
 	@ProcessInput
@@ -47,7 +50,9 @@ public class C26FeatureFlowlet extends GenericFlowlet {
 		fillParkingTime(feature);
 		featureStore.addFeature(feature);
 		
-		output.emit(feature.getVehicleId(), "vin", feature.getVehicleId().hashCode());
+		trainStore.addData(feature.getVehicleId(), feature.getId(), feature.asSparkFriendlyFeatureVector());
+		
+		//output.emit(feature.getVehicleId(), "vin", feature.getVehicleId().hashCode());
 	}
 	
 	private void fillParkingTime(VolvoFeature feature) {
@@ -57,7 +62,7 @@ public class C26FeatureFlowlet extends GenericFlowlet {
 		
 		Long lastEndTime = endTimeOfLastTrip.get(feature.getVehicleId());
 		if ( lastEndTime == null ) {
-			feature.setDuration("N/A");
+			feature.setDuration("15MIN");
 		}
 		else {
 			feature.setDuration("" + (convertParkingTime(feature.getStartTime() - lastEndTime)) + "MIN");

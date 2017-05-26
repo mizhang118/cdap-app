@@ -39,8 +39,8 @@ public class C26ModelFlowlet extends GenericFlowlet {
 	private C26TripDataset featureStore;
 	
 	// dataset for storing models
-	@UseDataSet("c26ModelStore")
-	private C26TripDataset modelStore;
+	@UseDataSet("c26TrainStore")
+	private C26TripDataset trainStore;
 	
 	private Map<String, Long> vinForModelling = new ConcurrentHashMap<String, Long>(2048);
 
@@ -67,43 +67,7 @@ public class C26ModelFlowlet extends GenericFlowlet {
 	 * @throws InterruptedException
 	 */
 	@Tick(delay = 10000L, unit = TimeUnit.MILLISECONDS)
-	public void trainModel() throws InterruptedException {
-/*
-		LOG.info("Run a command from CDAP container");
-        try {
-        	LOG.info("Before establish Runtime");
-            Runtime rt = Runtime.getRuntime();
-            LOG.info("After establish Runtime");
-            Process pr = rt.exec("ls -l /Users/mz/test/volvo/data");
-            LOG.info("After exec command");
-            BufferedReader input = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-            LOG.info("Open output stream");
-            String line=null;
-            while((line=input.readLine()) != null) {
-                LOG.info(line);
-            }
-
-            int exitVal = pr.waitFor();
-            LOG.info("Exited with error code "+exitVal);
-
-        } catch(Exception e) {
-            LOG.error("Fail to run command", e);
-        }
-        
-		LOG.info("Do several testing on file system...");
-		File file = new File("/tmp/de5127e9-ca29-45dc-955d-ae1e20b88dd5.csv");
-		if ( file.exists() ) {
-			LOG.info("Test file was found!!!!!!!!!!");
-		}
-		else {
-			LOG.info("Failed to find test file?????????");
-		}
-		//IOUtil.saveFile("/tmp/saveFile", "use apache common IO");
-		IOUtil.saveFile("/Users/mz/test/volvo/data/saveFile", "use apache common IO");
-		//IOUtil.saveFile2("/tmp/saveFile2", "use FileWriter");
-		IOUtil.saveFile2("/Users/mz/test/volvo/data/saveFile2", "use FileWriter");
-		LOG.info("Done testing on file system...");
-*/		
+	public void trainModel() throws InterruptedException {	
 		LOG.info("Start model training, check any vin is available for trainning...");
 		Set<String> vinset = vinForModelling.keySet();
 		for (String vin : vinset) {
@@ -128,14 +92,14 @@ public class C26ModelFlowlet extends GenericFlowlet {
 		    	    VolvoFeature feature = new VolvoFeature(value);
 		    	    if ( feature.getId() != null && feature.getId().equals(key) ) {
 		    	    	features.add(feature);
-		    	    	modelStore.addData(vin, feature.getId(), feature.asRFriendlyFeatureVector());
+		    	    	trainStore.addData(vin, feature.getId(), feature.asRFriendlyFeatureVector());
 		    	    }
 		    	    else {
 		    	    	LOG.error("The feature object (id {}) was not created correctly. Feature object id {}", key, feature.getId());
 		    	    }
 		    	    
 		    	}
-		    	
+/*		    	
 		    	//second step: print feature data onto a file and run Rscript to train model and parse results
 		    	LOG.info("{} features are retrieved. Create RecommandationServerForVolvo to do training...", features.size());
 				RecommendationServerForVolvo formatter = new RecommendationServerForVolvo();
@@ -149,7 +113,7 @@ public class C26ModelFlowlet extends GenericFlowlet {
 					modelStore.addData(vin,"" + count, gson.toJson(rule));
 					count++;
 				}
-		    	
+*/
 		    }
 		    else {
 		    	LOG.info("Skip vin {}. This vin may be trainned next time", vin);

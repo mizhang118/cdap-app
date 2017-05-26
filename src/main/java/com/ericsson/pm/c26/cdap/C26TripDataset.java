@@ -91,7 +91,7 @@ public class C26TripDataset extends AbstractDataset
 	 * @param vin used to look for visited pages counts
 	 * @return the number of visited pages
 	 */
-	public long getTripCount(String vin) {
+	public long getDataCount(String vin) {
 		Row row = this.table.get(new Get(vin));
 		if (row.isEmpty()) {
 			return 0;
