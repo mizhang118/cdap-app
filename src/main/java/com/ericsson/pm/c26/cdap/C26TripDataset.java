@@ -19,6 +19,8 @@ import co.cask.cdap.api.dataset.module.EmbeddedDataset;
 import co.cask.cdap.api.dataset.table.Get;
 import co.cask.cdap.api.dataset.table.Put;
 import co.cask.cdap.api.dataset.table.Row;
+import co.cask.cdap.api.dataset.table.Scan;
+import co.cask.cdap.api.dataset.table.Scanner;
 import co.cask.cdap.api.dataset.table.Table;
 
 import com.ericsson.pm.c26.entities.VolvoFeature;
@@ -26,15 +28,20 @@ import com.ericsson.pm.c26.entities.VolvoTrip;
 import com.google.common.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A custom-defined Dataset is used to track page views by IP addresses.
  */
 public class C26TripDataset extends AbstractDataset
 							implements RecordScannable<KeyValue<String, Map<String, String>>> {
+	private static final Logger LOG = LoggerFactory.getLogger(C26TripDataset.class);
 
 	// Define the underlying table
 	private Table table;
@@ -72,6 +79,13 @@ public class C26TripDataset extends AbstractDataset
 		//table.increment(new Increment(logInfo.getIp(), logInfo.getUri(), 1L));
 		table.put(new Put(feature.getVehicleId()).add(feature.getId(), feature.toJson()));;
 	}
+	
+	public void addModel(String consequent, String antecedent, double confidence) {
+		LOG.info("consequent is {} and antecedent is {} and confident is " + confidence, consequent, antecedent);
+		
+		//at first filter out all models that do not have destination in its consequent.
+		
+	}
 
 	/**
 	 * Get a data string from a specified VIN_ID.
@@ -101,6 +115,56 @@ public class C26TripDataset extends AbstractDataset
 			count += Bytes.toLong(entry.getValue());
 		}
 		return count;
+	}
+	
+	public List<String> getARFeatures(String vin) {
+		List<String> list = new ArrayList<String>();
+		
+		Map<String, String> map = getData(vin);
+		for (Map.Entry<String, String> entry : map.entrySet()) {
+			VolvoFeature feature = new VolvoFeature(entry.getValue());
+			list.add(feature.asSparkFriendlyFeatureVector());
+		}		
+		
+		return list;
+	}
+	
+	public List<String> getAllKeys() {
+		List<String> list = new ArrayList<String>();
+		
+		Scan scan = new Scan(null, null);
+		Scanner scanner = table.scan(scan);
+		Row row = null;
+		while ( (row = scanner.next() ) != null ) {
+			byte[] rowkey = row.getRow();
+			list.add(Bytes.toString(rowkey));
+		}
+		
+		return list;
+	}
+	
+	public List<String> getVinForTrain() {
+		List<String> list = new ArrayList<String>();
+		long trainInterval = 1000 * 60 * 60; // milliseconds of one hour
+		
+		Scan scan = new Scan(null, null);
+		Scanner scanner = table.scan(scan);
+		Row row = null;
+		while ( (row = scanner.next() ) != null ) {
+			byte[] rowkey = row.getRow();
+			String vin = Bytes.toString(rowkey);
+			
+			String timestampStr = row.getString(Bytes.toBytes("timestamp"));
+			long timestamp = 0l;
+			try { timestamp = Long.parseLong(timestampStr); } catch (Exception e) {}
+			LOG.debug("vin {} has timestamp of {}", vin, timestamp);
+			long current = System.currentTimeMillis();
+			if ( (current - timestamp) < trainInterval ) {
+				list.add(Bytes.toString(rowkey));
+			}
+		}
+		
+		return list;
 	}
 
 	@Override

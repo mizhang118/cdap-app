@@ -210,8 +210,8 @@ public class VolvoFeature extends Entity implements Writable, Comparable<VolvoFe
 	@Override
 	public void readFields(DataInput dataInput) throws IOException {
 		String json = WritableUtils.readString(dataInput);
-		VolvoTrip trip = new VolvoTrip(json);
-		this.copy(trip);
+		VolvoFeature feature = new VolvoFeature(json);
+		this.copy(feature);
 	}
 
 	@Override

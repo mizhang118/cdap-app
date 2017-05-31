@@ -50,7 +50,7 @@ public class C26FeatureFlowlet extends GenericFlowlet {
 		fillParkingTime(feature);
 		featureStore.addFeature(feature);
 		
-		trainStore.addData(feature.getVehicleId(), feature.getId(), feature.asSparkFriendlyFeatureVector());
+		trainStore.addData(feature.getVehicleId(), "timestamp", "" + System.currentTimeMillis());
 		
 		//output.emit(feature.getVehicleId(), "vin", feature.getVehicleId().hashCode());
 	}
