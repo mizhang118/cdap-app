@@ -16,6 +16,7 @@ import co.cask.cdap.api.dataset.DatasetSpecification;
 import co.cask.cdap.api.dataset.lib.AbstractDataset;
 import co.cask.cdap.api.dataset.lib.KeyValue;
 import co.cask.cdap.api.dataset.module.EmbeddedDataset;
+import co.cask.cdap.api.dataset.table.Delete;
 import co.cask.cdap.api.dataset.table.Get;
 import co.cask.cdap.api.dataset.table.Put;
 import co.cask.cdap.api.dataset.table.Row;
@@ -42,6 +43,8 @@ import org.slf4j.LoggerFactory;
 public class C26TripDataset extends AbstractDataset
 							implements RecordScannable<KeyValue<String, Map<String, String>>> {
 	private static final Logger LOG = LoggerFactory.getLogger(C26TripDataset.class);
+	
+	public static long TRAIN_INTERVAL = 1000 * 60 * 60; // milliseconds of one hour
 
 	// Define the underlying table
 	private Table table;
@@ -85,6 +88,17 @@ public class C26TripDataset extends AbstractDataset
 		
 		//at first filter out all models that do not have destination in its consequent.
 		
+	}
+	
+	/**
+	 * Get a data string from a specified VIN_ID.
+	 *
+	 * @param VIN_ID used to look for all trips of the vehicle
+	 * @return all trips of a vehicle
+	 */
+	public void deleteData(String vin) {
+		Delete delete = new Delete(vin);
+		this.table.delete(delete);
 	}
 
 	/**
@@ -145,7 +159,7 @@ public class C26TripDataset extends AbstractDataset
 	
 	public List<String> getVinForTrain() {
 		List<String> list = new ArrayList<String>();
-		long trainInterval = 1000 * 60 * 60; // milliseconds of one hour
+		long trainInterval = TRAIN_INTERVAL;
 		
 		Scan scan = new Scan(null, null);
 		Scanner scanner = table.scan(scan);

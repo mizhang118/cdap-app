@@ -2,6 +2,7 @@ package com.ericsson.pm.c26.spark
 
 import com.ericsson.pm.c26.cdap.C26AnalyticsApp
 import com.ericsson.pm.c26.cdap.C26TripDataset
+import com.ericsson.pm.c26.entities.VolvoModel;
 
 import co.cask.cdap.api.TxRunnable
 import co.cask.cdap.api.common.Bytes
@@ -38,46 +39,66 @@ class AssociationRule extends SparkMain {
         while( iter.hasNext() ) {
           val vin = iter.next();
           LOG.info("Detected vin as {}", vin)
+          try {
+            val features: List[String] = featureStore.getARFeatures(vin)
+            val dataCount = features.size();
+            LOG.info("Feature number: {}", dataCount)
+            val support: Double = calSupport(dataCount)
+            LOG.info("Use suport {} for training", support);
+            
+            val featureSeq = scala.collection.JavaConverters.asScalaIteratorConverter(features.iterator).asScala.toSeq
+            val rdd = sc.parallelize(featureSeq)
+            LOG.info("RDD contains {} records as trip features for training.", rdd.count())
           
-          val features: List[String] = featureStore.getARFeatures(vin)
-          LOG.info("Feature number: {}", features.size())
-          //val iter2 = features.iterator()
-          //while( iter2.hasNext() ) {
-          //  LOG.info("Feature {}", iter2.next())
-          //}
+            val transactions: RDD[Array[String]] = rdd.map(s => s.trim.split(','))
+            LOG.info("RDD finished map() and has {} records.", transactions.count)
           
-          val featureSeq = scala.collection.JavaConverters.asScalaIteratorConverter(features.iterator).asScala.toSeq
-          val rdd = sc.parallelize(featureSeq)
+            val trans_filter = transactions.filter(e => e(0) != e(1))
+            LOG.info("RDD has {} records after filtering.", trans_filter.count)
           
-          LOG.info("RDD contains {} records.", rdd.count())
-          
-          val transactions: RDD[Array[String]] = rdd.map(s => s.trim.split(','))
-          LOG.info("RDD finished map() and has {} records.", transactions.count)
-          
-          val trans_filter = transactions.filter(e => e(0) != e(1))
-          LOG.info("RDD has {} records after filtering.", trans_filter.count)
-          
-          val fpg = new FPGrowth().setMinSupport(0.001).setNumPartitions(10)
-          val model = fpg.run(trans_filter)
-          val minConfidence = 0.8
-          val models = model.generateAssociationRules(minConfidence)
-          LOG.info("Total model number is {}", models.count())
-          var count: Int = 0
-          models.collect().foreach { rule => 
-            val antecedent = rule.antecedent.mkString("", ",", "")
-            val consequent = rule.consequent.mkString("", ",", "")
-            if ( consequent.indexOf("destination=") >= 0 ) {
-              count = count + 1
-              modelStore.addData(vin, count.toString(), "")
+            val fpg = new FPGrowth().setMinSupport(support).setNumPartitions(10)
+            val model = fpg.run(trans_filter)
+            val minConfidence = 0.8
+            val models = model.generateAssociationRules(minConfidence)
+            val outputModelCount = models.count()
+            LOG.info("Total model number is {}", outputModelCount)
+            if ( outputModelCount > 0 ) {
+              var count: Int = 0
+              //at first clean dataset
+              modelStore.deleteData(vin);
+              
+              //then save models into dataset
+              models.collect().foreach { rule => 
+                val antecedent = rule.antecedent.mkString("", ",", "")
+                val consequent = rule.consequent.mkString("", ",", "")
+                if ( consequent.indexOf("destination=") >= 0 && antecedent.indexOf("origin=") >= 0 ) {
+                  count = count + 1
+                  val model: VolvoModel = VolvoModel.parse(antecedent, consequent, rule.confidence)
+                  modelStore.addData(vin, count.toString(), model.toJson())
+                }
+                //LOG.info(rule.antecedent.mkString("[", ",", "]") + " => " + rule.consequent.mkString("[", ",", "]") + ", " + rule.confidence) 
+              }
+              LOG.info("Model number is {} after filtering", count)
             }
-            //LOG.info(rule.antecedent.mkString("[", ",", "]") + " => " + rule.consequent.mkString("[", ",", "]") + ", " + rule.confidence) 
           }
-          LOG.info("Model number is {} after filtering", count)
+          catch {
+            case e: Exception => LOG.error("Exception has been generated when train vin " + vin + ": {}", e.getMessage)
+          }
         }
       }
     })
 
     LOG.info("Done!")
+  }
+  
+  def calSupport(dataCount: Int): Double = {
+    var support: Double = 0.2;
+    if (dataCount < 4) {
+        support = 0.25;
+    } else {
+        support = 1.01 / (dataCount + 1);
+    }
+    support
   }
 }
 

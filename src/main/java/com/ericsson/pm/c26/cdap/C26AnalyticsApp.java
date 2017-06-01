@@ -11,6 +11,7 @@ import com.ericsson.pm.c26.spark.AssociationRule;
 import co.cask.cdap.api.Config;
 import co.cask.cdap.api.app.AbstractApplication;
 import co.cask.cdap.api.data.stream.Stream;
+import co.cask.cdap.api.schedule.Schedules;
 import co.cask.cdap.api.spark.AbstractSpark;
 
 public class C26AnalyticsApp extends AbstractApplication<Config> {
@@ -40,9 +41,22 @@ public class C26AnalyticsApp extends AbstractApplication<Config> {
 	    addFlow(new C26Flow());
 
 	    // Add the c26 services
-	    //addService(new WiseService());
+	    addService(new C26TripService());
 	    
+	    //spark ML lib to train model
 	    addSpark(new SparkAssoicationRule());
+	    
+	    //add workflow to run spark job
+	    addWorkflow(new C26ModelTrainWorkflow());
+	    
+	    
+	    //at first setup training interval
+	    C26TripDataset.TRAIN_INTERVAL = 1000 * 60 * 60; // milliseconds of one hour
+	    //schedule the workflow hourly that matches TRAIN_INTERVAL
+	    scheduleWorkflow(Schedules.builder("Run Spark mllib hourly")
+	    		                  .setMaxConcurrentRuns(1)
+	                              .createTimeSchedule("0 * * * *"),
+	                     "C26ModelTrainWorkflow");
 	}
 	
 	  /**
