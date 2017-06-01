@@ -1,5 +1,6 @@
 package com.ericsson.pm.c26.cdap;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.GET;
@@ -8,6 +9,10 @@ import javax.ws.rs.PathParam;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.ericsson.pm.c26.entities.VolvoFeature;
+import com.ericsson.pm.c26.entities.VolvoTrip;
+
 import co.cask.cdap.api.annotation.UseDataSet;
 import co.cask.cdap.api.service.AbstractService;
 import co.cask.cdap.api.service.http.AbstractHttpServiceHandler;
@@ -100,7 +105,12 @@ public class C26TripService extends AbstractService {
 	    public void getTripsByVin(HttpServiceRequest request, HttpServiceResponder responder, 
 	    		                 @PathParam("vin") String vin) {
 	    	
-	    	Map<String, String> trips = tripStore.getData(vin);
+	    	Map<String, String> map = tripStore.getData(vin);
+	    	Map<String, VolvoTrip> trips = new HashMap<String, VolvoTrip>();
+			for (Map.Entry<String, String> entry : map.entrySet()) {
+				VolvoTrip trip = new VolvoTrip(entry.getValue());
+				trips.put(entry.getKey(), trip);
+			}
 	    	responder.sendJson(200, trips);
 	    }
 

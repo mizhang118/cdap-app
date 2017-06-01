@@ -1,5 +1,6 @@
 package com.ericsson.pm.c26.cdap;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,6 +10,8 @@ import javax.ws.rs.PathParam;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.ericsson.pm.c26.entities.VolvoFeature;
 
 import co.cask.cdap.api.annotation.UseDataSet;
 import co.cask.cdap.api.service.AbstractService;
@@ -57,7 +60,7 @@ public class C26FeatureService extends AbstractService {
 	     *
 	     * <pre>{@code
 	     *
-	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26TripService/methods/feature/vins
+	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26FeatureService/methods/feature/vins
 	     * }</pre>
 	     */
 	    @GET
@@ -73,7 +76,7 @@ public class C26FeatureService extends AbstractService {
 	     *
 	     * <pre>{@code
 	     *
-	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26TripService/methods/feature/count
+	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26FeatureService/methods/feature/count
 	     * }</pre>
 	     */
 	    @GET
@@ -94,16 +97,20 @@ public class C26FeatureService extends AbstractService {
 	     *
 	     * <pre>{@code
 	     *
-	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26TripService/methods/features/{vin}
+	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26FeatureService/methods/features/{vin}
 	     * }</pre>
 	     */
 	    @GET
 	    @Path("/features/{vin}")
 	    public void getfeaturesByVin(HttpServiceRequest request, HttpServiceResponder responder, 
 	    		                 @PathParam("vin") String vin) {
-	    	
-	    	Map<String, String> trips = featureStore.getData(vin);
-	    	responder.sendJson(200, trips);
+	    	Map<String, String> map = featureStore.getData(vin);
+	    	Map<String, VolvoFeature> features = new HashMap<String, VolvoFeature>();
+			for (Map.Entry<String, String> entry : map.entrySet()) {
+				VolvoFeature feature = new VolvoFeature(entry.getValue());
+				features.put(entry.getKey(), feature);
+			}
+	    	responder.sendJson(200, features);
 	    }
 
 	    /**
@@ -111,7 +118,7 @@ public class C26FeatureService extends AbstractService {
 	     *
 	     * <pre>{@code
 	     *
-	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26TripService/methods/feature/[vin]/count
+	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26FeatureService/methods/feature/[vin]/count
 	     * }</pre>
 	     *
 	     * With the URI to query form in the GET body.

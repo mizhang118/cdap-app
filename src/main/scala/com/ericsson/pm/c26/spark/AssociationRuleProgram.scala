@@ -38,23 +38,23 @@ class AssociationRule extends SparkMain {
         val iter = vins.iterator()
         while( iter.hasNext() ) {
           val vin = iter.next();
-          LOG.info("Detected vin as {}", vin)
+          LOG.trace("Detected vin as {}", vin)
           try {
             val features: List[String] = featureStore.getARFeatures(vin)
             val dataCount = features.size();
-            LOG.info("Feature number: {}", dataCount)
+            LOG.trace("Feature number: {}", dataCount)
             val support: Double = calSupport(dataCount)
-            LOG.info("Use suport {} for training", support);
+            LOG.trace("Use suport {} for training", support);
             
             val featureSeq = scala.collection.JavaConverters.asScalaIteratorConverter(features.iterator).asScala.toSeq
             val rdd = sc.parallelize(featureSeq)
             LOG.info("RDD contains {} records as trip features for training.", rdd.count())
           
             val transactions: RDD[Array[String]] = rdd.map(s => s.trim.split(','))
-            LOG.info("RDD finished map() and has {} records.", transactions.count)
+            LOG.trace("RDD finished map() and has {} records.", transactions.count)
           
             val trans_filter = transactions.filter(e => e(0) != e(1))
-            LOG.info("RDD has {} records after filtering.", trans_filter.count)
+            LOG.trace("RDD has {} records after filtering.", trans_filter.count)
           
             val fpg = new FPGrowth().setMinSupport(support).setNumPartitions(10)
             val model = fpg.run(trans_filter)
@@ -78,7 +78,7 @@ class AssociationRule extends SparkMain {
                 }
                 //LOG.info(rule.antecedent.mkString("[", ",", "]") + " => " + rule.consequent.mkString("[", ",", "]") + ", " + rule.confidence) 
               }
-              LOG.info("Model number is {} after filtering", count)
+              LOG.trace("Model number is {} after filtering", count)
             }
           }
           catch {

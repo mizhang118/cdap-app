@@ -44,8 +44,14 @@ public class C26AnalyticsApp extends AbstractApplication<Config> {
 	    // Add the c26 flow
 	    addFlow(new C26Flow());
 
-	    // Add the c26 services
+	    // Add the c26 trip services
 	    addService(new C26TripService());
+
+	    // Add the c26 feature services
+	    addService(new C26FeatureService());
+
+	    // Add the c26 model services
+	    addService(new C26ModelService());
 	    
 	    //spark ML lib to train model
 	    addSpark(new SparkAssoicationRule());
