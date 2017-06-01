@@ -21,6 +21,10 @@ public class C26AnalyticsApp extends AbstractApplication<Config> {
 	public static final String DATASET_FEATURE_STORE = "c26FeatureStore";
 	public static final String DATASET_TRAIN_STORE = "c26TrainStore";
 	public static final String DATASET_MODEL_STORE = "c26ModelStore";
+	public static final String WORKFLOW_MODEL_TRAIN = "c26ModelTrainWorkflow";
+	public static final String SERVICE_TRIP = "c26TripService";
+	public static final String SERVICE_FEATURE = "c26FeatureService";
+	public static final String SERVICE_MODEL = "c26ModelService";
 	
 	@Override
 	public void configure() {
@@ -56,7 +60,7 @@ public class C26AnalyticsApp extends AbstractApplication<Config> {
 	    scheduleWorkflow(Schedules.builder("Run Spark mllib hourly")
 	    		                  .setMaxConcurrentRuns(1)
 	                              .createTimeSchedule("0 * * * *"),
-	                     "C26ModelTrainWorkflow");
+	                     WORKFLOW_MODEL_TRAIN);
 	}
 	
 	  /**

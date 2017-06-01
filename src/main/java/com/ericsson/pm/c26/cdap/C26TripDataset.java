@@ -114,7 +114,7 @@ public class C26TripDataset extends AbstractDataset
 	}
 
 	/**
-	 * Get the total number of visited pages viewed from a specified IP address.
+	 * Get the total number of trips of a vin.
 	 *
 	 * @param vin used to look for visited pages counts
 	 * @return the number of visited pages
@@ -124,11 +124,13 @@ public class C26TripDataset extends AbstractDataset
 		if (row.isEmpty()) {
 			return 0;
 		}
-		int count = 0;
-		for (Map.Entry<byte[], byte[]> entry : row.getColumns().entrySet()) {
-			count += Bytes.toLong(entry.getValue());
+		
+		Map<byte[], byte[]> map = row.getColumns();
+		if ( map == null ) {
+			return 0;
 		}
-		return count;
+		
+		return map.size();
 	}
 	
 	public List<String> getARFeatures(String vin) {

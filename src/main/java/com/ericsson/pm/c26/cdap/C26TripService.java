@@ -1,7 +1,8 @@
 package com.ericsson.pm.c26.cdap;
 
+import java.util.List;
+import java.util.Map;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
@@ -14,16 +15,16 @@ import co.cask.cdap.api.service.http.HttpServiceRequest;
 import co.cask.cdap.api.service.http.HttpServiceResponder;
 
 public class C26TripService extends AbstractService {
-	  @Override
-	  protected void configure() {
-	    setName("C26TripService");
+	@Override
+	protected void configure() {
+		setName(C26AnalyticsApp.SERVICE_TRIP);
 	    addHandler(new TripServiceHandler());
-	  }
-
-	  /**
-	   * Handler which defines HTTP endpoints to access information stored in the {@code c26TripStore} Dataset.
-	   */
-	  public static class TripServiceHandler extends AbstractHttpServiceHandler {
+	}
+	
+	/**
+	 * Handler which defines HTTP endpoints to access information stored in the {@code c26TripStore} Dataset.
+	 */
+	public static class TripServiceHandler extends AbstractHttpServiceHandler {
 	    private static final Logger LOG = LoggerFactory.getLogger(TripServiceHandler.class);
 
 	    // Annotation indicates that the pageViewStore custom DataSet is used in the Service
@@ -35,14 +36,34 @@ public class C26TripService extends AbstractService {
 	     *
 	     * <pre>{@code
 	     *
-	     * GET http://[host]:[port]/v3/namespaces/test/apps/c26Analytics/services/TripService/methods/vin/count
+	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26TripService/methods/trip/vin/count
 	     * }</pre>
 	     */
 	    @GET
-	    @Path("/vin/count")
+	    @Path("/trip/vin/count")
 	    public void getVinCount(HttpServiceRequest request, HttpServiceResponder responder) {
-	      long count = 0;
-	      responder.sendJson(200, count);
+	    	List<String> keys = tripStore.getAllKeys();
+	    	long count = 0;
+	    	if ( keys != null ) {
+	    		count = keys.size();
+	    	}
+	    	responder.sendJson(200, count);
+	    }
+	    
+	    /**
+	     * Queries the list of vins
+	     *
+	     * <pre>{@code
+	     *
+	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26TripService/methods/trip/vins
+	     * }</pre>
+	     */
+	    @GET
+	    @Path("/trip/vins")
+	    public void getVins(HttpServiceRequest request, HttpServiceResponder responder) {
+	    	List<String> keys = tripStore.getAllKeys();
+	    	
+	    	responder.sendJson(200, keys);
 	    }
 	    
 	    /**
@@ -50,14 +71,37 @@ public class C26TripService extends AbstractService {
 	     *
 	     * <pre>{@code
 	     *
-	     * GET http://[host]:[port]/v3/namespaces/test/apps/c26Analytics/services/TripService/methods/trip/count
+	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26TripService/methods/trip/count
 	     * }</pre>
 	     */
 	    @GET
 	    @Path("/trip/count")
 	    public void getTripCount(HttpServiceRequest request, HttpServiceResponder responder) {
-	      long count = 0;
-	      responder.sendJson(200, count);
+	    	List<String> keys = tripStore.getAllKeys();
+	    	long count = 0;
+	    	
+	    	for(String key : keys) {
+	    		count += tripStore.getDataCount(key);
+	    	}
+	    	
+	    	responder.sendJson(200, count);
+	    }
+	    
+	    /**
+	     * Queries the trips in a given vin
+	     *
+	     * <pre>{@code
+	     *
+	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26TripService/methods/trips/{vin}
+	     * }</pre>
+	     */
+	    @GET
+	    @Path("/trips/{vin}")
+	    public void getTripsByVin(HttpServiceRequest request, HttpServiceResponder responder, 
+	    		                 @PathParam("vin") String vin) {
+	    	
+	    	Map<String, String> trips = tripStore.getData(vin);
+	    	responder.sendJson(200, trips);
 	    }
 
 	    /**
@@ -65,7 +109,7 @@ public class C26TripService extends AbstractService {
 	     *
 	     * <pre>{@code
 	     *
-	     * GET http://[host]:[port]/v3/namespaces/test/apps/c26Analytics/services/TripService/methods/trip/[vin]/count
+	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26TripService/methods/trip/[vin]/count
 	     * }</pre>
 	     *
 	     * With the URI to query form in the GET body.
@@ -74,8 +118,8 @@ public class C26TripService extends AbstractService {
 	    @Path("/trip/{vin}/count")
 	    public void getTripCountByVin(HttpServiceRequest request, HttpServiceResponder responder,
 	                                 @PathParam("vin") String vin) {
-	      long count = 0;
-	      responder.sendJson(200, count);
+	    	long count = tripStore.getDataCount(vin);
+	    	responder.sendJson(200, count);
 	    }
-	  }
 	}
+}
