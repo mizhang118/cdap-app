@@ -107,7 +107,7 @@ public class C26FeatureService extends AbstractService {
 	    	Map<String, String> map = featureStore.getData(vin);
 	    	Map<String, VolvoFeature> features = new HashMap<String, VolvoFeature>();
 			for (Map.Entry<String, String> entry : map.entrySet()) {
-				VolvoFeature feature = new VolvoFeature(entry.getValue());
+				VolvoFeature feature = (VolvoFeature) (new VolvoFeature()).toEntity(entry.getValue());
 				features.put(entry.getKey(), feature);
 			}
 	    	responder.sendJson(200, features);

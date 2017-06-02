@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ericsson.pm.c26.entities.VolvoModel;
+import com.google.gson.Gson;
 
 import co.cask.cdap.api.annotation.UseDataSet;
 import co.cask.cdap.api.service.AbstractService;
@@ -106,8 +107,15 @@ public class C26ModelService extends AbstractService {
 	    		                 @PathParam("vin") String vin) {
 	    	Map<String, String> map = modelStore.getData(vin);
 	    	Map<String, VolvoModel> models = new HashMap<String, VolvoModel>();
+	    	Gson gson = new Gson();
 			for (Map.Entry<String, String> entry : map.entrySet()) {
-				VolvoModel model = new VolvoModel(entry.getValue());
+				VolvoModel model = null;
+				try {
+					model = gson.fromJson(entry.getValue(), VolvoModel.class);
+				}
+				catch (Exception e) {
+					LOG.error("Wrong JSON to create VolvoMode: {}", entry.getValue(), e);
+				}
 				models.put(entry.getKey(), model);
 			}
 	    	responder.sendJson(200, models);

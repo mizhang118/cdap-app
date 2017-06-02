@@ -45,10 +45,6 @@ public class VolvoFeature extends Entity implements Writable, Comparable<VolvoFe
 		super();
 	}
 	
-	public VolvoFeature(String json) {
-		super(json);
-	}
-	
 	public VolvoFeature(VolvoTrip trip) {
 		this.setId(trip.getId());
 		this.setVehicleId(trip.getVin());
@@ -210,7 +206,7 @@ public class VolvoFeature extends Entity implements Writable, Comparable<VolvoFe
 	@Override
 	public void readFields(DataInput dataInput) throws IOException {
 		String json = WritableUtils.readString(dataInput);
-		VolvoFeature feature = new VolvoFeature(json);
+		VolvoFeature feature = (VolvoFeature)(new VolvoFeature()).toEntity(json);
 		this.copy(feature);
 	}
 

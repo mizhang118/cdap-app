@@ -48,10 +48,6 @@ public class VolvoTrip extends Entity implements WritableComparable<VolvoTrip> {
 	public VolvoTrip() {
 		super();
 	}
-	
-	public VolvoTrip(String json) {
-		super(json);
-	}
 
 	public String getId() {
 		return id;
@@ -275,7 +271,7 @@ public class VolvoTrip extends Entity implements WritableComparable<VolvoTrip> {
 	  @Override
 	  public void readFields(DataInput dataInput) throws IOException {
 		  String json = WritableUtils.readString(dataInput);
-		  VolvoTrip trip = new VolvoTrip(json);
+		  VolvoTrip trip = (VolvoTrip) (new VolvoTrip()).toEntity(json);
 		  this.copy(trip);
 	  }
 }

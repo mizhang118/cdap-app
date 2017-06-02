@@ -138,7 +138,7 @@ public class C26TripDataset extends AbstractDataset
 		
 		Map<String, String> map = getData(vin);
 		for (Map.Entry<String, String> entry : map.entrySet()) {
-			VolvoFeature feature = new VolvoFeature(entry.getValue());
+			VolvoFeature feature = (VolvoFeature) (new VolvoFeature()).toEntity(entry.getValue());
 			list.add(feature.asSparkFriendlyFeatureVector());
 		}		
 		

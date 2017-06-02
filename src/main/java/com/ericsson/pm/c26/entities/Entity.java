@@ -22,15 +22,17 @@ public class Entity implements Serializable {
 	public Entity() {
 	}
 	
-	public Entity(String json) {
+	public Entity toEntity(String json) {
+		Entity entity = null;
 		try {
 			Gson gson = new Gson();
-			Entity entity = gson.fromJson(json, this.getClass());
-			copy(entity);
+			entity = gson.fromJson(json, this.getClass());
 		}
 		catch (Exception e) {
 			LOG.error("Wrong JSON format: {}", json, e);
 		}
+		
+		return entity;
 	}
 
 	public String toJson() {

@@ -29,10 +29,6 @@ public class VolvoModel extends Entity implements Writable, Comparable<VolvoMode
 		super();
 	}
 	
-	public VolvoModel(String json) {
-		super(json);
-	}
-	
 	public void putAntecedent(String key, String value) {
 		this.antecedents.put(key, value);
 	}
@@ -129,7 +125,7 @@ public class VolvoModel extends Entity implements Writable, Comparable<VolvoMode
 	@Override
 	public void readFields(DataInput dataInput) throws IOException {
 		String json = WritableUtils.readString(dataInput);
-		VolvoModel model = new VolvoModel(json);
+		VolvoModel model = (VolvoModel) (new VolvoModel()).toEntity(json);
 		this.copy(model);
 	}
 
