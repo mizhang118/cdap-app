@@ -37,7 +37,7 @@ curl -w"\n" -X POST "localhost:11015/v3/namespaces/test/streams/c26Stream" -d "2
 CDAP cli:
 cdap cli start mapreduce pm-analytics.c26ModelTrainWorkflow
 or REST API:
-curl -w"\n" -X POST "localhost:11015/v3/namespaces/test/apps/pm-analytics/workflows/c26ModelTrainWorkflow/start"
+curl -w"\n" -X POST "localhost:11015/v3/namespaces/test/apps/c26Analytics/workflows/c26ModelTrainWorkflow/start"
 ```
 
 - data query

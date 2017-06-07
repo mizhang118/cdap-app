@@ -158,26 +158,59 @@ public class C26ModelService extends AbstractService {
 				}
 				//filter models by parameter
 				if ( origin != null ) {
+					origin = origin.toLowerCase();
+					
 					String ori = model.getAntecedent("origin");
-					if ( ori.indexOf(origin) < 0 ) {
+					if ( ori != null ) {
+						ori = ori.toLowerCase();
+						if ( ori.indexOf(origin) < 0 ) {
+							continue;
+						}
+					}
+					else {
 						continue;
 					}
 				}
 				if ( timeOfDay != null ) {
+					timeOfDay = timeOfDay.toLowerCase();
+					
 					String tod = model.getAntecedent("timeOfDay");
-					if ( !tod.equals(timeOfDay) ) {
-						continue;
+					if ( tod != null ) {
+						tod = tod.toLowerCase();
+						if ( !tod.equals(timeOfDay) ) {
+							continue;
+						}
+						else {
+							continue;
+						}
 					}
 				}
 				if ( dayOfWeek != null ) {
+					dayOfWeek = dayOfWeek.toLowerCase();
 					String dow = model.getAntecedent("dayOfWeek");
-					if ( !dow.equals(dayOfWeek) ) {
+					if ( dow != null ) {
+						dow = dow.toLowerCase();
+						if ( !dow.equals(dayOfWeek) ) {
+							continue;
+						}
+						else {
+							continue;
+						}
+					}
+					else {
 						continue;
 					}
 				}
 				if ( dayType != null ) {
+					dayType = dayType.toLowerCase();
 					String dt = model.getAntecedent("dayType");
-					if ( !dt.equals(dayType) ) {
+					if ( dt != null ) {
+						dt = dt.toLowerCase();
+						if ( !dt.equals(dayType) ) {
+							continue;
+						}
+					}
+					else {
 						continue;
 					}
 				}
@@ -217,16 +250,19 @@ public class C26ModelService extends AbstractService {
 	    	//(2) handle empty list
 	    	if ( size == 0 ) {
 	    		models.add(model);
+	    		return;
 	    	}
 	    	
 	    	//(3) Insert model with largest confidence: add into head
 	    	if ( model.getConfidence() > models.get(0).getConfidence() ) {
 	    		models.add(0, model);
+	    		return;
 	    	}
 	    	
 	    	//(4) Insert model with smallest confidence: add into tail
 	    	if ( model.getConfidence() <= models.get(size - 1).getConfidence() ) {
 	    		models.add(size, model);
+	    		return;
 	    	}
 	    	
 	    	//(5) Insert model into middle
@@ -234,6 +270,7 @@ public class C26ModelService extends AbstractService {
 	    	while ( count < size ) {
 	    		if ( model.getConfidence() > models.get(count).getConfidence() ) {
 	    			models.add(count, model);
+	    			return;
 	    		}
 	    		count++;
 	    	}
