@@ -180,9 +180,9 @@ public class C26ModelService extends AbstractService {
 						if ( !tod.equals(timeOfDay) ) {
 							continue;
 						}
-						else {
-							continue;
-						}
+					}
+					else {
+						continue;
 					}
 				}
 				if ( dayOfWeek != null ) {
@@ -191,9 +191,6 @@ public class C26ModelService extends AbstractService {
 					if ( dow != null ) {
 						dow = dow.toLowerCase();
 						if ( !dow.equals(dayOfWeek) ) {
-							continue;
-						}
-						else {
 							continue;
 						}
 					}
