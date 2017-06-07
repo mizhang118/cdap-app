@@ -33,12 +33,15 @@ curl -w"\n" -X POST "localhost:11015/v3/namespaces/test/streams/c26Stream" -d "2
 ```
 
 - Run Workflow/Spark to train models
+```
 CDAP cli:
-`cdap cli start mapreduce pm-analytics.c26ModelTrainWorkflow`
+cdap cli start mapreduce pm-analytics.c26ModelTrainWorkflow
 or REST API:
-`curl -w"\n" -X POST "localhost:11015/v3/namespaces/test/apps/pm-analytics/workflows/c26ModelTrainWorkflow/start"`
+curl -w"\n" -X POST "localhost:11015/v3/namespaces/test/apps/pm-analytics/workflows/c26ModelTrainWorkflow/start"
+```
 
 - data query
+```
 Total trip count:
 http://localhost:11015/v3/namespaces/test/apps/c26Analytics/services/c26TripService/methods/trip/count
 
@@ -46,7 +49,7 @@ All vins of the trips:
 http://localhost:11015/v3/namespaces/test/apps/c26Analytics/services/c26TripService/methods/trip/vins
 
 All trips of a vin:
-http://localhost:11015/v3/namespaces/test/apps/c26Analytics/services/c26TripService/methods/trips/{vin}
+http://localhost:11015/v3/namespaces/test/apps/c26Analytics/services/c26TripService/methods/trip/{vin}
 
 Total feature count:
 http://localhost:11015/v3/namespaces/test/apps/c26Analytics/services/c26FeatureService/methods/feature/count
@@ -55,7 +58,7 @@ All vins of the features:
 http://localhost:11015/v3/namespaces/test/apps/c26Analytics/services/c26FeatureService/methods/feature/vins
 
 All features of a vin:
-http://localhost:11015/v3/namespaces/test/apps/c26Analytics/services/c26FeatureService/methods/features/{vin}
+http://localhost:11015/v3/namespaces/test/apps/c26Analytics/services/c26FeatureService/methods/feature/{vin}
 
 Total model count:
 http://localhost:11015/v3/namespaces/test/apps/c26Analytics/services/c26ModelService/methods/model/count
@@ -64,9 +67,11 @@ All vins of the model:
 http://localhost:11015/v3/namespaces/test/apps/c26Analytics/services/c26ModelService/methods/model/vins
 
 All models of a vin:
-http://localhost:11015/v3/namespaces/test/apps/c26Analytics/services/c26ModelService/methods/models/{vin}
+http://localhost:11015/v3/namespaces/test/apps/c26Analytics/services/c26ModelService/methods/model/{vin}
 
-
+Query models of a vin:
+http://localhost:11015/v3/namespaces/test/apps/c26Analytics/services/c26ModelService/methods/model/{vin}?origin=xxx&timeOfDay=yyy&dayOfWeek=Monday&dayType=weekend
+```
 
 ## Swagger API demo
 

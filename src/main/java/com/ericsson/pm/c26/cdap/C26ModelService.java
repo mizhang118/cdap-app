@@ -1,12 +1,15 @@
 package com.ericsson.pm.c26.cdap;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,15 +101,15 @@ public class C26ModelService extends AbstractService {
 	     *
 	     * <pre>{@code
 	     *
-	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26ModelService/methods/models/{vin}
+	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26ModelService/methods/model/{vin}
 	     * }</pre>
 	     */
 	    @GET
-	    @Path("/models/{vin}")
-	    public void getfeaturesByVin(HttpServiceRequest request, HttpServiceResponder responder, 
+	    @Path("/model/{vin}")
+	    public void getModelsByVin(HttpServiceRequest request, HttpServiceResponder responder, 
 	    		                 @PathParam("vin") String vin) {
 	    	Map<String, String> map = modelStore.getData(vin);
-	    	Map<String, VolvoModel> models = new HashMap<String, VolvoModel>();
+	    	List<VolvoModel> models = new ArrayList<VolvoModel>();
 	    	Gson gson = new Gson();
 			for (Map.Entry<String, String> entry : map.entrySet()) {
 				VolvoModel model = null;
@@ -115,8 +118,72 @@ public class C26ModelService extends AbstractService {
 				}
 				catch (Exception e) {
 					LOG.error("Wrong JSON to create VolvoMode: {}", entry.getValue(), e);
+					continue;
 				}
-				models.put(entry.getKey(), model);
+				insertModel(models, model);
+			}
+	    	responder.sendJson(200, models);
+	    }
+	    
+	    /**
+	     * Queries the models in a given vin
+	     *
+	     * <pre>{@code
+	     *
+	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26ModelService/methods/model/query/{vin}?origin=xxx&timeOfDay=yyy&dayOfWeek=Monday&dayType=weekend
+	     * }</pre>
+	     */
+	    @GET
+	    @Path("/model/query/{vin}")
+	    public void queryModelsByVin(HttpServiceRequest request, HttpServiceResponder responder, 
+	    		                 @PathParam("vin") String vin,
+	    		                 @QueryParam("origin") String origin,
+	    		                 @QueryParam("timeOfDay") String timeOfDay,
+	    		                 @QueryParam("dayOfWeek") String dayOfWeek,
+	    		                 @QueryParam("dayType") String dayType) {
+	    	//read parameters
+	    	LOG.info("Model query parameters: vin=" + vin + ", origin=" + origin + ", timeOfDay=" + timeOfDay + ", dayOfWeek=" + dayOfWeek + ", dayType=" + dayType);
+	    	
+	    	Map<String, String> map = modelStore.getData(vin);
+	    	List<VolvoModel> models = new ArrayList<VolvoModel>();
+	    	Gson gson = new Gson();
+			for (Map.Entry<String, String> entry : map.entrySet()) {
+				VolvoModel model = null;
+				try {
+					model = gson.fromJson(entry.getValue(), VolvoModel.class);
+				}
+				catch (Exception e) {
+					LOG.error("Wrong JSON to create VolvoMode: {}", entry.getValue(), e);
+					continue;
+				}
+				//filter models by parameter
+				if ( origin != null ) {
+					String ori = model.getAntecedent("origin");
+					if ( ori.indexOf(origin) < 0 ) {
+						continue;
+					}
+				}
+				if ( timeOfDay != null ) {
+					String tod = model.getAntecedent("timeOfDay");
+					if ( !tod.equals(timeOfDay) ) {
+						continue;
+					}
+				}
+				if ( dayOfWeek != null ) {
+					String dow = model.getAntecedent("dayOfWeek");
+					if ( !dow.equals(dayOfWeek) ) {
+						continue;
+					}
+				}
+				if ( dayType != null ) {
+					String dt = model.getAntecedent("dayType");
+					if ( !dt.equals(dayType) ) {
+						continue;
+					}
+				}
+				
+				//insert the model after it passes all filters
+				insertModel(models, model);
 			}
 	    	responder.sendJson(200, models);
 	    }
@@ -133,10 +200,43 @@ public class C26ModelService extends AbstractService {
 	     */
 	    @GET
 	    @Path("/model/{vin}/count")
-	    public void getFeatureCountByVin(HttpServiceRequest request, HttpServiceResponder responder,
+	    public void getModelCountByVin(HttpServiceRequest request, HttpServiceResponder responder,
 	                                 @PathParam("vin") String vin) {
 	    	long count = modelStore.getDataCount(vin);
 	    	responder.sendJson(200, count);
+	    }
+	    
+	    private void insertModel(List<VolvoModel> models, VolvoModel model) {
+	    	//(1) handle null issue
+	    	if ( model == null || models == null ) {
+	    		return;
+	    	}
+	    	
+	    	int size = models.size();
+	    	
+	    	//(2) handle empty list
+	    	if ( size == 0 ) {
+	    		models.add(model);
+	    	}
+	    	
+	    	//(3) Insert model with largest confidence: add into head
+	    	if ( model.getConfidence() > models.get(0).getConfidence() ) {
+	    		models.add(0, model);
+	    	}
+	    	
+	    	//(4) Insert model with smallest confidence: add into tail
+	    	if ( model.getConfidence() <= models.get(size - 1).getConfidence() ) {
+	    		models.add(size, model);
+	    	}
+	    	
+	    	//(5) Insert model into middle
+	    	int count = 1;
+	    	while ( count < size ) {
+	    		if ( model.getConfidence() > models.get(count).getConfidence() ) {
+	    			models.add(count, model);
+	    		}
+	    		count++;
+	    	}
 	    }
 	}
 }

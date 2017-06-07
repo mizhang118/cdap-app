@@ -97,11 +97,11 @@ public class C26FeatureService extends AbstractService {
 	     *
 	     * <pre>{@code
 	     *
-	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26FeatureService/methods/features/{vin}
+	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26FeatureService/methods/feature/{vin}
 	     * }</pre>
 	     */
 	    @GET
-	    @Path("/features/{vin}")
+	    @Path("/feature/{vin}")
 	    public void getfeaturesByVin(HttpServiceRequest request, HttpServiceResponder responder, 
 	    		                 @PathParam("vin") String vin) {
 	    	Map<String, String> map = featureStore.getData(vin);

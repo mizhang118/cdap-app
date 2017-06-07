@@ -97,11 +97,11 @@ public class C26TripService extends AbstractService {
 	     *
 	     * <pre>{@code
 	     *
-	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26TripService/methods/trips/{vin}
+	     * GET http://mzs-macbook-pro.local:11015/v3/namespaces/test/apps/c26Analytics/services/c26TripService/methods/trip/{vin}
 	     * }</pre>
 	     */
 	    @GET
-	    @Path("/trips/{vin}")
+	    @Path("/trip/{vin}")
 	    public void getTripsByVin(HttpServiceRequest request, HttpServiceResponder responder, 
 	    		                 @PathParam("vin") String vin) {
 	    	
