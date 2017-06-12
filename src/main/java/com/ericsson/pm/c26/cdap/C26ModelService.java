@@ -110,6 +110,10 @@ public class C26ModelService extends AbstractService {
 	    		                 @PathParam("vin") String vin) {
 	    	Map<String, String> map = modelStore.getData(vin);
 	    	List<VolvoModel> models = new ArrayList<VolvoModel>();
+	    	if ( map == null ) {
+	    		responder.sendJson(200, models);
+	    		return;
+	    	}
 	    	Gson gson = new Gson();
 			for (Map.Entry<String, String> entry : map.entrySet()) {
 				VolvoModel model = null;
@@ -146,6 +150,10 @@ public class C26ModelService extends AbstractService {
 	    	
 	    	Map<String, String> map = modelStore.getData(vin);
 	    	List<VolvoModel> models = new ArrayList<VolvoModel>();
+	    	if ( map == null ) {
+	    		responder.sendJson(200, models);
+	    		return;
+	    	}	    	
 	    	Gson gson = new Gson();
 			for (Map.Entry<String, String> entry : map.entrySet()) {
 				VolvoModel model = null;

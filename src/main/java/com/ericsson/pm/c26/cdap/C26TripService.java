@@ -107,6 +107,10 @@ public class C26TripService extends AbstractService {
 	    	
 	    	Map<String, String> map = tripStore.getData(vin);
 	    	Map<String, VolvoTrip> trips = new HashMap<String, VolvoTrip>();
+	    	if ( map == null ) {
+	    		responder.sendJson(200, trips);
+	    		return;
+	    	}
 			for (Map.Entry<String, String> entry : map.entrySet()) {
 				VolvoTrip trip = (VolvoTrip) (new VolvoTrip()).toEntity(entry.getValue());
 				trips.put(entry.getKey(), trip);
